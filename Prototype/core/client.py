@@ -10,7 +10,7 @@ class Client:
         self.data_size = 1000
         self._connect() #connect to the running server
     def _connect(self) -> None:
-        self.socket.connect((s.gethostname(), gc.port))
+        self.socket.connect((gc.host, gc.port))
         self.socket.sendall(self.data.encode())
         server_msg = self.socket.recv(self.data_size).decode()
         print(server_msg)

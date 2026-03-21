@@ -1,13 +1,13 @@
 import socket as s
-from HTTP.core.config import ServerConfig as sc
-from HTTP.core.config import GlobalConfig as gc
+from HTTP.config.config import ServerConfig as sc
+from HTTP.config.config import GlobalConfig as gc
 
 
-config = sc(clients=5, connection=True, data_size=1000, debug=False)
+config = sc(clients=5, connection=True, data_size=1000)
 
 class Server:
 
-    def __init__(self, clients=sc.clients, connection=sc.connection, debug=sc.debug):
+    def __init__(self, clients=sc.clients, connection=sc.connection, debug=gc.debug):
         self.clients : int = clients
         self.data_size = 1000
         self.connection : bool = connection
@@ -16,7 +16,7 @@ class Server:
         #the server initialization process
         self.socket = s.socket(s.AF_INET, s.SOCK_STREAM)
         self.socket.setsockopt(s.SOL_SOCKET, s.SO_REUSEADDR, 1)
-        self.socket.bind((s.gethostname(), gc.port)) #informations are on HTTP.core.config
+        self.socket.bind((gc.host, gc.port)) #informations are on HTTP.core.config
 
 
         #the server running process through socket.listen(n)

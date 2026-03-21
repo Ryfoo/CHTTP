@@ -8,7 +8,7 @@ header = tuple[str, str]
 #global configuration options for all files
 @dataclass
 class GlobalConfig:
-    host : str = s.gethostname()
+    host : str = "127.0.0.1"
     port : int = 8000
     debug : bool = False
 
