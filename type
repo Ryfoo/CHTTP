@@ -1,0 +1,174 @@
+[4msocket[24m(2)                                                System Calls Manual                                               [4msocket[24m(2)
+
+[1mNAME[0m
+       socket - create an endpoint for communication
+
+[1mLIBRARY[0m
+       Standard C library ([4mlibc[24m, [4m-lc[24m)
+
+[1mSYNOPSIS[0m
+       [1m#include <sys/socket.h>[0m
+
+       [1mint socket(int [4m[22mdomain[24m[1m, int [4m[22mtype[24m[1m, int [4m[22mprotocol[24m[1m);[0m
+
+[1mDESCRIPTION[0m
+       [1msocket[22m() creates an endpoint for communication and returns a file descriptor that refers to that endpoint.  The file descrip‐
+       tor returned by a successful call will be the lowest-numbered file descriptor not currently open for the process.
+
+       The  [4mdomain[24m argument specifies a communication domain; this selects the protocol family which will be used for communication.
+       These families are defined in [4m<sys/socket.h>[24m.  The formats currently understood by the Linux kernel include:
+       Name         Purpose                                    Man page
+       [1mAF_UNIX      [22mLocal communication                        [1munix[22m(7)
+       [1mAF_LOCAL     [22mSynonym for [1mAF_UNIX[0m
+       [1mAF_INET      [22mIPv4 Internet protocols                    [1mip[22m(7)
+       [1mAF_AX25      [22mAmateur radio AX.25 protocol               [1max25[22m(4)
+       [1mAF_IPX       [22mIPX - Novell protocols
+       [1mAF_APPLETALK [22mAppleTalk                                  [1mddp[22m(7)
+       [1mAF_X25       [22mITU-T X.25 / ISO/IEC 8208 protocol         [1mx25[22m(7)
+       [1mAF_INET6     [22mIPv6 Internet protocols                    [1mipv6[22m(7)
+       [1mAF_DECnet    [22mDECet protocol sockets
+       [1mAF_KEY       [22mKey management protocol, originally  de‐
+                    veloped for usage with IPsec
+       [1mAF_NETLINK   [22mKernel user interface device               [1mnetlink[22m(7)
+       [1mAF_PACKET    [22mLow-level packet interface                 [1mpacket[22m(7)
+       [1mAF_RDS       [22mReliable Datagram Sockets (RDS) protocol   [1mrds[22m(7)
+                                                               [1mrds-rdma[22m(7)
+       [1mAF_PPPOX     [22mGeneric PPP transport layer, for setting
+                    up L2 tunnels (L2TP and PPPoE)
+       [1mAF_LLC       [22mLogical  link  control  (IEEE 802.2 LLC)
+                    protocol
+       [1mAF_IB        [22mInfiniBand native addressing
+       [1mAF_MPLS      [22mMultiprotocol Label Switching
+       [1mAF_CAN       [22mController Area Network  automotive  bus
+                    protocol
+       [1mAF_TIPC      [22mTIPC, "cluster domain sockets" protocol
+       [1mAF_BLUETOOTH [22mBluetooth low-level socket protocol
+       [1mAF_ALG       [22mInterface to kernel crypto API
+       [1mAF_VSOCK     [22mVSOCK   (originally  "VMWare  VSockets")   [1mvsock[22m(7)
+                    protocol for hypervisor-guest communica‐
+                    tion
+       [1mAF_KCM       [22mKCM (kernel connection multiplexer)  in‐
+                    terface
+       [1mAF_XDP       [22mXDP (express data path) interface
+
+       Further  details of the above address families, as well as information on several other address families, can be found in [1mad‐[0m
+       [1mdress_families[22m(7).
+
+       The socket has the indicated [4mtype[24m, which specifies the communication semantics.  Currently defined types are:
+
+       [1mSOCK_STREAM     [22mProvides sequenced, reliable, two-way, connection-based byte streams.  An out-of-band data transmission mech‐
+                       anism may be supported.
+
+       [1mSOCK_DGRAM      [22mSupports datagrams (connectionless, unreliable messages of a fixed maximum length).
+
+       [1mSOCK_SEQPACKET  [22mProvides a sequenced, reliable, two-way connection-based data transmission path for datagrams of fixed  maxi‐
+                       mum length; a consumer is required to read an entire packet with each input system call.
+
+       [1mSOCK_RAW        [22mProvides raw network protocol access.
+
+       [1mSOCK_RDM        [22mProvides a reliable datagram layer that does not guarantee ordering.
+
+       [1mSOCK_PACKET     [22mObsolete and should not be used in new programs; see [1mpacket[22m(7).
+
+       Some socket types may not be implemented by all protocol families.
+
+       Since  Linux  2.6.27,  the [4mtype[24m argument serves a second purpose: in addition to specifying a socket type, it may include the
+       bitwise OR of any of the following values, to modify the behavior of [1msocket[22m():
+
+       [1mSOCK_NONBLOCK   [22mSet the [1mO_NONBLOCK [22mfile status flag on the open file description (see [1mopen[22m(2)) referred to by  the  new  file
+                       descriptor.  Using this flag saves extra calls to [1mfcntl[22m(2) to achieve the same result.
+
+       [1mSOCK_CLOEXEC    [22mSet  the  close-on-exec  ([1mFD_CLOEXEC[22m)  flag on the new file descriptor.  See the description of the [1mO_CLOEXEC[0m
+                       flag in [1mopen[22m(2) for reasons why this may be useful.
+
+       The [4mprotocol[24m specifies a particular protocol to be used with the socket.  Normally only a single protocol exists to support a
+       particular socket type within a given protocol family, in which case [4mprotocol[24m can be specified as 0.  However, it is possible
+       that many protocols may exist, in which case a particular protocol must be specified in this manner.  The protocol number  to
+       use  is specific to the “communication domain” in which communication is to take place; see [1mprotocols[22m(5).  See [1mgetprotoent[22m(3)
+       on how to map protocol name strings to protocol numbers.
+
+       Sockets of type [1mSOCK_STREAM [22mare full-duplex byte streams.  They do not preserve record boundaries.  A stream socket  must  be
+       in  a  [4mconnected[24m  state before any data may be sent or received on it.  A connection to another socket is created with a [1mcon‐[0m
+       [1mnect[22m(2) call.  Once connected, data may be transferred using [1mread[22m(2) and [1mwrite[22m(2) calls or some variant of  the  [1msend[22m(2)  and
+       [1mrecv[22m(2)  calls.   When a session has been completed a [1mclose[22m(2) may be performed.  Out-of-band data may also be transmitted as
+       described in [1msend[22m(2) and received as described in [1mrecv[22m(2).
+
+       The communications protocols which implement a [1mSOCK_STREAM [22mensure that data is not lost or duplicated.  If a  piece  of  data
+       for  which the peer protocol has buffer space cannot be successfully transmitted within a reasonable length of time, then the
+       connection is considered to be dead.  When [1mSO_KEEPALIVE [22mis enabled on the socket the protocol checks in  a  protocol-specific
+       manner  if  the other end is still alive.  A [1mSIGPIPE [22msignal is raised if a process sends or receives on a broken stream; this
+       causes naive processes, which do not handle the signal, to exit.  [1mSOCK_SEQPACKET [22msockets employ  the  same  system  calls  as
+       [1mSOCK_STREAM  [22msockets.   The only difference is that [1mread[22m(2) calls will return only the amount of data requested, and any data
+       remaining in the arriving packet will be discarded.  Also all message boundaries in incoming datagrams are preserved.
+
+       [1mSOCK_DGRAM [22mand [1mSOCK_RAW [22msockets allow sending of datagrams to correspondents named in [1msendto[22m(2) calls.  Datagrams are  gener‐
+       ally received with [1mrecvfrom[22m(2), which returns the next datagram along with the address of its sender.
+
+       [1mSOCK_PACKET [22mis an obsolete socket type to receive raw packets directly from the device driver.  Use [1mpacket[22m(7) instead.
+
+       An  [1mfcntl[22m(2) [1mF_SETOWN [22moperation can be used to specify a process or process group to receive a [1mSIGURG [22msignal when the out-of-
+       band data arrives or [1mSIGPIPE [22msignal when a [1mSOCK_STREAM [22mconnection breaks unexpectedly.  This operation may also  be  used  to
+       set the process or process group that receives the I/O and asynchronous notification of I/O events via [1mSIGIO[22m.  Using [1mF_SETOWN[0m
+       is equivalent to an [1mioctl[22m(2) call with the [1mFIOSETOWN [22mor [1mSIOCSPGRP [22margument.
+
+       When  the  network  signals  an error condition to the protocol module (e.g., using an ICMP message for IP) the pending error
+       flag is set for the socket.  The next operation on this socket will return the error code of the  pending  error.   For  some
+       protocols  it is possible to enable a per-socket error queue to retrieve detailed information about the error; see [1mIP_RECVERR[0m
+       in [1mip[22m(7).
+
+       The operation of sockets is controlled by socket level [4moptions[24m.  These options are defined in [4m<sys/socket.h>[24m.  The  functions
+       [1msetsockopt[22m(2) and [1mgetsockopt[22m(2) are used to set and get options.
+
+[1mRETURN VALUE[0m
+       On success, a file descriptor for the new socket is returned.  On error, -1 is returned, and [4merrno[24m is set to indicate the er‐
+       ror.
+
+[1mERRORS[0m
+       [1mEACCES [22mPermission to create a socket of the specified type and/or protocol is denied.
+
+       [1mEAFNOSUPPORT[0m
+              The implementation does not support the specified address family.
+
+       [1mEINVAL [22mUnknown protocol, or protocol family not available.
+
+       [1mEINVAL [22mInvalid flags in [4mtype[24m.
+
+       [1mEMFILE [22mThe per-process limit on the number of open file descriptors has been reached.
+
+       [1mENFILE [22mThe system-wide limit on the total number of open files has been reached.
+
+       [1mENOBUFS [22mor [1mENOMEM[0m
+              Insufficient memory is available.  The socket cannot be created until sufficient resources are freed.
+
+       [1mEPROTONOSUPPORT[0m
+              The protocol type or the specified protocol is not supported within this domain.
+
+       Other errors may be generated by the underlying protocol modules.
+
+[1mSTANDARDS[0m
+       POSIX.1-2008.
+
+       [1mSOCK_NONBLOCK [22mand [1mSOCK_CLOEXEC [22mare Linux-specific.
+
+[1mHISTORY[0m
+       POSIX.1-2001, 4.4BSD.
+
+       [1msocket[22m() appeared in 4.2BSD.  It is generally portable to/from non-BSD systems supporting clones of the BSD socket layer (in‐
+       cluding System V variants).
+
+       The  manifest constants used under 4.x BSD for protocol families are [1mPF_UNIX[22m, [1mPF_INET[22m, and so on, while [1mAF_UNIX[22m, [1mAF_INET[22m, and
+       so on are used for address families.  However, already the BSD man page promises: "The protocol family generally is the  same
+       as the address family", and subsequent standards use AF_* everywhere.
+
+[1mEXAMPLES[0m
+       An example of the use of [1msocket[22m() is shown in [1mgetaddrinfo[22m(3).
+
+[1mSEE ALSO[0m
+       [1maccept[22m(2),  [1mbind[22m(2),  [1mclose[22m(2),  [1mconnect[22m(2),  [1mfcntl[22m(2),  [1mgetpeername[22m(2),  [1mgetsockname[22m(2), [1mgetsockopt[22m(2), [1mioctl[22m(2), [1mlisten[22m(2),
+       [1mread[22m(2), [1mrecv[22m(2), [1mselect[22m(2), [1msend[22m(2),  [1mshutdown[22m(2),  [1msocketpair[22m(2),  [1mwrite[22m(2),  [1mgetprotoent[22m(3),  [1maddress_families[22m(7),  [1mip[22m(7),
+       [1msocket[22m(7), [1mtcp[22m(7), [1mudp[22m(7), [1munix[22m(7)
+
+       “An Introductory 4.3BSD Interprocess Communication Tutorial” and “BSD Interprocess Communication Tutorial”, reprinted in [4mUNIX[0m
+       [4mProgrammer's[24m [4mSupplementary[24m [4mDocuments[24m [4mVolume[24m [4m1.[0m
+
+Linux man-pages 6.7                                          2024-01-28                                                    [4msocket[24m(2)
