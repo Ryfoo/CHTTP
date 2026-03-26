@@ -1,8 +1,10 @@
-//server.h
-//this header file provides wrappers for the pre-existing socket library
-//for better error handling, and additionl features, you want an example ? 
-//retransmission for instance.
-
+/*
+    server.h
+    this header file provides wrappers for the pre-existing socket library
+    for better error handling, and additionl features, you want an example ? 
+    retransmission for instance.
+*/
+#pragma once
 
 #ifndef SOCKET_H
 #define SOCKET_H
@@ -12,11 +14,14 @@
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include "../include/handler.h"
+#include "../include/common.h"
 
+// user-defined constants
 
 #define QUEUE_LIMIT 1000
 #define CONNECTION 1
-#define BUFF_SIZE 4096
 
 /*
  * takes a pointer to sockaddr_in as an argument, consider the manual for more details.
@@ -43,9 +48,13 @@ int listening_starter(struct sockaddr_in* addr);
  * return -1 on failure, 0 on success.
  */
 
-int monitor(int fd, struct sockaddr_in* addr);
+success_flag_t monitor(socket_fd_t fd, struct sockaddr_in* addr);
 
 
+// typedef int socket_fd_t;
+// typedef struct http_request http_request_t;
+// typedef struct http_response http_response_t;
+// typedef int n_bytes_t
 
 
 #endif

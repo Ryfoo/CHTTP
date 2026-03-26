@@ -7,7 +7,7 @@
 */
 
 
-int server_engine(char* ip, char* port) {
+success_flag_t server_engine(string ip, string port) {
     struct sockaddr_in addr;
     int fd;
     

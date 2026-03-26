@@ -8,9 +8,9 @@ void address_init(struct sockaddr_in* addr, char* ip, char* port) {
     addr->sin_port = htons(port);
 }
 
-int listening_starter(struct sockaddr_in* addr)
+socket_fd_t listening_starter(struct sockaddr_in* addr)
 {
-    int fd;
+    socket_fd_t fd;
 
     fd = socket(AF_INET,SOCK_STREAM, 0);
     if (fd < 0) {
@@ -28,13 +28,13 @@ int listening_starter(struct sockaddr_in* addr)
         return -1;
     }
     
-    return fd;
+    socket_fd_t fd;
 }
 
 
-int monitor(int fd, struct sockaddr_in* addr)
+success_flag_t monitor(socket_fd_t fd, struct sockaddr_in* addr)
 {
-    int shared_fd;
+    socket_fd_t shared_fd;
     while(CONNECTION) {
         socklen_t len = sizeof(struct sockaddr_in);
         shared_fd = accept(fd, (struct sockaddr *) addr, &len);
@@ -43,13 +43,13 @@ int monitor(int fd, struct sockaddr_in* addr)
             continue;
         }
         printf("The connection has been established\n");
-        char *buffer = malloc(BUFF_SIZE * sizeof(char));
+        char* buffer = malloc(BUFF_SIZE);
         if(!buffer){
             perror("Error allocating memory\n");
             close(shared_fd);
             continue;
         }
-        memset(buffer, 0, BUFF_SIZE * sizeof(char));
+        memset(buffer, 0, BUFF_SIZE);
         buffer = strcpy(buffer, "hello mate, welcome to the team\n");
         if (send(shared_fd, buffer, BUFF_SIZE, 0) < 0) {
             perror("Error sending data over the common file descriptor\n");
@@ -57,10 +57,16 @@ int monitor(int fd, struct sockaddr_in* addr)
             close(shared_fd);
             continue;
         }
+        if(handle_client(shared_fd) < 0) {
+            perror("Error handling the client\n");
+            free(buffer);
+            close(shared_fd);
+            return -1;
+        }
         free(buffer);
         close(shared_fd);
     }
     
     close(shared_fd);
-    return shared_fd;
+    return 0;
 }

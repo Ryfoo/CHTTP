@@ -1,7 +1,10 @@
-//socket.h
-//this header file provides wrappers for the pre-existing socket library
-//for better error handling, and additionl features, you want an example ? 
-//retransmission for instance.
+/*
+    socket.h
+    this header file provides wrappers for the pre-existing socket library
+    for better error handling, and additionl features, you want an example ? 
+    retransmission for instance.
+*/
+#pragma once
 
 #ifndef SERVER_H
 #define SERVER_H
@@ -12,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "../include/socket.h"
+#include "../include/common.h"
 
 // user-defined constants
 
@@ -22,7 +26,7 @@
  * provides error handling
  * returns -1 on failure, 0 on success
  */
-int server_engine(char* ip, char* port);
+success_flag_t server_engine(string ip, string port);
 
-
+typedef char* string;
 #endif
