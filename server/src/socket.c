@@ -1,13 +1,17 @@
 #include "socket.h"
 
-// constants offer by socket.h : AF_INET (IP/v4), SOCK_STREAM (type of connection)
 
-
-int server_engine(int d, int t, int p) {
+struct sockaddr* address_init(struct sockaddr_in* addr, char* ip, int port) {
     memset(&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    addr.sin_port = htons(8080);
+    addr->sin_family = AF_INET;
+    addr->sin_addr.s_addr = inet_addr(ip);
+    addr->sin_port = htons(port);
+    return (struct sockaddr*) addr;
+}
+
+int connection_starter()
+{
+    int fd;
 
     fd = socket(AF_INET,SOCK_STREAM, 0);
     if (fd < 0) {
@@ -19,10 +23,6 @@ int server_engine(int d, int t, int p) {
     if (!listen(fd, QUEUE_LIMIT)) {
         return -1;
     }
-    while(CONNECTION) {
-        if(!accept()) {
-            return -1;
-        }
-    }
-    return 0;
+    
+    return fd;
 }
