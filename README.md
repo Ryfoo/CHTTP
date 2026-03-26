@@ -5,9 +5,10 @@
 ---
 
 ## Current State
-
-Building the listener and the handler using C, lowest functions provided by "socket.h" header file.
-one level above linux system calls.
+(this section is subject to consistent change)
+Building the the http models (request and response) following the HTTP protocol rules and restrictions,
+and the connection handlers
+next step : routers and the routing system.
 
 ---
 
