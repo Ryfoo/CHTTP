@@ -28,16 +28,15 @@ socket_fd_t listening_starter(struct sockaddr_in* addr)
         return -1;
     }
     
-    socket_fd_t fd;
+    return fd;
 }
 
 
 success_flag_t monitor(socket_fd_t fd, struct sockaddr_in* addr)
 {
-    socket_fd_t shared_fd;
     while(CONNECTION) {
         socklen_t len = sizeof(struct sockaddr_in);
-        shared_fd = accept(fd, (struct sockaddr *) addr, &len);
+        socket_fd_t shared_fd = accept(fd, (struct sockaddr *) addr, &len);
         if(shared_fd < 0) {
             perror("Error establishing a common file descriptor\n");
             continue;
@@ -58,7 +57,7 @@ success_flag_t monitor(socket_fd_t fd, struct sockaddr_in* addr)
             continue;
         }
         if(handle_client(shared_fd) < 0) {
-            perror("Error handling the client\n");
+            perror("Error handling the request\n");
             free(buffer);
             close(shared_fd);
             return -1;
@@ -66,7 +65,5 @@ success_flag_t monitor(socket_fd_t fd, struct sockaddr_in* addr)
         free(buffer);
         close(shared_fd);
     }
-    
-    close(shared_fd);
     return 0;
 }

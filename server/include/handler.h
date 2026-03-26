@@ -13,9 +13,4 @@
 
 n_bytes_t handle_client(socket_fd_t fd);
 
-typedef int socket_fd_t;
-typedef struct http_request http_request_t;
-typedef struct http_response http_response_t;
-typedef int n_bytes_t;
-
 #endif
