@@ -1,0 +1,20 @@
+
+
+# Detectable source files
+*.c       linguist-language=C
+*.h       linguist-language=C
+
+*.py      linguist-language=Python
+
+*.go      linguist-language=Go
+
+# Exclude non-source files from stats
+*.md      linguist-documentation
+*.txt     linguist-documentation
+*.json    linguist-data
+*.yaml    linguist-data
+*.yml     linguist-data
+*.xml     linguist-data
+*.toml    linguist-data
+*.sh      linguist-vendored
+Makefile  linguist-vendored
