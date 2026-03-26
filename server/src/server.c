@@ -8,6 +8,8 @@
 
 
 int server_engine(char* ip, int port) {
+    struct sockaddr_in addr;
+    int fd;
     
     /*
         initializing and preparting the struct sockaddr with 
@@ -15,7 +17,7 @@ int server_engine(char* ip, int port) {
         address_init is a user-defind function
         for modulartiy, readability and portability
     */
-    struct sockaddr* ad = address_init(&addr, ip, port);
+    address_init(&addr, ip, port);
 
     /*
         connection starter()
@@ -26,19 +28,23 @@ int server_engine(char* ip, int port) {
         begins the listening operation.
     */
 
-    fd = listening_starter();
-    while(CONNECTION) {
-        int new_fd = accept(fd, (struct sockaddr*) &addr, sizeof(addr));
-        if(new_fd < 0) {
-            return -1;
-        }
-        printf("The connection has been established\n");
-        char *buffer = malloc(BUFF * sizeof(int));
-        int r = recv(new_fd, BUFF, sizeof(BUFF), 0);
-        if (r < 0) {
-            return -1;
-        }
-        printf(BUFF);
+    fd = listening_starter(&addr);
+
+    if (fd < 0) {
+        return -1;
     }
+    /*
+        Here, lies the heart of the server.
+        an active loop to recieve requests and handling them later.
+        a common file descriptor will be created, to send and recieve data.
+    
+    */
+
+    if(monitor(fd, &addr) < 0) {
+        printf("Error establishing a stable connection to receive requests\n");
+        close(fd);
+        return -1;
+    }
+    close(fd);
     return 0;
 }

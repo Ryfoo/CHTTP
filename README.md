@@ -74,14 +74,14 @@ HTTP/1.1 is a modern protocol that relies on a consistent connection between two
 
 Not much decisions were taken, you might be wondering why ? I will tell you in a minute :
 
-- firstly and most importantly, I am a loser and I can't take decisions by myself.
-- Secondly, most of the implementations are a strict pre-agreed-upon protocols that was designed by better engineers (than you, not me) to follow certain rules and constraints. However, there is one important thing to note, the server follows HTTP/1.0 rather than the modern HTTP/1.0, the key distinction was discussed earlier.
+- firstly and most importantly, I can't take decisions by myself.
+- Secondly, most of the implementations are strict pre-agreed-upon protocols that were designed by better engineers (than you, not me) to follow certain rules and constraints. However, there is one important thing to note, the server follows HTTP/1.0 rather than the modern HTTP/1.1, the key distinction was discussed earlier.
 
 ---
 
 ## Honorable Mention & Inspiration
 
-the only and only, Daniel Hirsch.
+the one and only, Daniel Hirsch.
 <https://www.youtube.com/@HirschDaniel>
 
 ---

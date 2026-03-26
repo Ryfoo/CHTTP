@@ -14,15 +14,7 @@
 #include "socket.h"
 
 // user-defined constants
-// address options
-// the file descriptor, the essance of everything, in this program
 
-
-#define QUEUE_LIMIT 1000
-#define CONNECTION 1
-#define BUFF 1024
-extern struct sockaddr_in addr;
-int fd;
 
 /*
  * takes char* ip and int port as arguments.
