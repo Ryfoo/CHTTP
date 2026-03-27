@@ -15,17 +15,17 @@ socket_fd_t listening_starter(struct sockaddr_in* addr)
     fd = socket(AF_INET,SOCK_STREAM, 0);
     if (fd < 0) {
         printf("Error establishing a socket\n");
-        return -1;
+        return FAILURE;
     }
     if(bind(fd, (struct sockaddr*) addr, sizeof(*addr)) < 0) {
         printf("Error binding (giving the local fd) the address : %s\n", addr->sin_addr);
         close(fd);
-        return -1;
+        return FAILURE;
     }
     if (listen(fd, QUEUE_LIMIT) < 0) {
         printf("Error commecing the server\n");
         close(fd);
-        return -1;
+        return FAILURE;
     }
     
     return fd;
@@ -70,7 +70,7 @@ success_flag_t monitor(socket_fd_t fd, struct sockaddr_in* addr)
             perror("Error handling the request\n");
             free(buffer);
             close(shared_fd);
-            return -1;
+            return FAILURE;
         }
         free(buffer);
         close(shared_fd);
@@ -90,42 +90,51 @@ socket_fd_t connection_starter(struct sockaddr_in *addr) {
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd < 0) {
         printf("Error creating socket\n");
-        return -1;
+        return FAILURE;
     }
 
     if (connect(fd, (struct sockaddr *)addr, sizeof(*addr)) < 0) {
         printf("Error connecting to server\n");
         close(fd);
-        return -1;
+        return FAILURE;
     }
 
     return fd;
 }
 
-/*
-    Mirrors monitor() on the server side.
-    The client side of the active communication loop.
-    sends a request, waits for a response.
-*/
-success_flag_t exchange(int fd, struct sockaddr_in *addr) {
+
+n_bytes_t exchange(    
+                            int fd, 
+                            struct sockaddr_in *addr, 
+                            char* method, 
+                            char* uri, 
+                            header headers[HEADERS_LEN],
+                            char* body
+                        )
+{
     char* buffer = malloc(BUFF_SIZE);
     if(!buffer) {
         perror("Error allocating memory (Client's Side)\n");
-        return -1;
+        return FAILURE;
     }
     n_bytes_t bytes;
 
-    /*
-        Send a request to the server.
-        serialize() to build the HTTP message first.
-    */
     // Demo, here where the serialization should take place.
     // http_req instance -> serialize to shareable data -> send
-    const char *request = "GET / HTTP/1.1\r\nHost: 127.0.0.1/\r\n\r\n";
-    if (send(fd, request, strlen(request), 0) < 0) {
-        perror("Error sending request\n");
-        return -1;
+    http_request_t req;
+    if(request_constructor(&req, method, uri, headers, body) < 0) 
+    {
+        perror("Error creating an HTTP request\n");
+        return FAILURE;
     }
+    if(serialize(req, buffer, BUFF_SIZE) < 0)
+    {
+        return FAILURE;
+    }
+    // if (send(fd, request, strlen(request), 0) < 0) {
+    //     perror("Error sending request\n");
+    //     return FAILURE;
+    // }
 
     /*
         Wait for the server response.
@@ -135,9 +144,11 @@ success_flag_t exchange(int fd, struct sockaddr_in *addr) {
     bytes = recv(fd, buffer, BUFF_SIZE, 0);
     if (bytes < 0) {
         perror("Error receiving response\n");
-        return -1;
+        return FAILURE;
     }
 
+
+    //here where the showcasing of the response should take place.
     printf("Server response:\n%s\n", buffer);
-    return 0;
+    return bytes;
 }

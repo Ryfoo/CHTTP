@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include "../include/handler.h"
 #include "../include/common.h"
+#include "../include/serializer.h"
 
 // user-defined constants
 
@@ -68,11 +69,6 @@ success_flag_t monitor(socket_fd_t fd, struct sockaddr_in* addr);
 success_flag_t connection_starter(struct sockaddr_in *addr);
 
 /*
-    
-    Symmetric to monitor() on the server.
-    sends requests and receives responses.
-*/
-/*
  * takes as arguments :
  * @params file descriptor of type socket_fd_t (uint8_t)  
  * @params pointer to sockaddr_in addr (consider the manual page of socket.h).
@@ -80,7 +76,7 @@ success_flag_t connection_starter(struct sockaddr_in *addr);
  * follows the options AF_INET, SOCK_STREAM (man socket for more details).
  * return -1 on failure, 0 on success.
  */
-success_flag_t exchange(int fd, struct sockaddr_in *addr);
+success_flag_t exchange(int fd, struct sockaddr_in *addr, char* method, char* uri, header headers[HEADERS_LEN], char* body);
 
 
 
