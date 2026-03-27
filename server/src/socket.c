@@ -14,7 +14,7 @@ socket_fd_t listening_starter(struct sockaddr_in* addr)
 
     fd = socket(AF_INET,SOCK_STREAM, 0);
     if (fd < 0) {
-        printf("Error establishing a file descriptor\n");
+        printf("Error establishing a socket\n");
         return -1;
     }
     if(bind(fd, (struct sockaddr*) addr, sizeof(*addr)) < 0) {
@@ -108,27 +108,33 @@ socket_fd_t connection_starter(struct sockaddr_in *addr) {
     sends a request, waits for a response.
 */
 success_flag_t exchange(int fd, struct sockaddr_in *addr) {
-    char buffer[1024];
-    ssize_t bytes_received;
+    char* buffer = malloc(BUFF_SIZE);
+    if(!buffer) {
+        perror("Error allocating memory (Client's Side)\n");
+        return -1;
+    }
+    n_bytes_t bytes;
 
     /*
         Send a request to the server.
         serialize() to build the HTTP message first.
     */
-    const char *request = "GET / HTTP/1.1\r\nHost: localhost\r\n\r\n";
+    // Demo, here where the serialization should take place.
+    // http_req instance -> serialize to shareable data -> send
+    const char *request = "GET / HTTP/1.1\r\nHost: 127.0.0.1/\r\n\r\n";
     if (send(fd, request, strlen(request), 0) < 0) {
-        printf("Error sending request\n");
+        perror("Error sending request\n");
         return -1;
     }
 
     /*
         Wait for the server response.
-        parse() to deserialize the incoming message.
+        data -> parse to a string/json -> instance of http_res
     */
-    memset(buffer, 0, sizeof(buffer));
-    bytes_received = recv(fd, buffer, sizeof(buffer) - 1, 0);
-    if (bytes_received < 0) {
-        printf("Error receiving response\n");
+    memset(buffer, 0, BUFF_SIZE);
+    bytes = recv(fd, buffer, BUFF_SIZE, 0);
+    if (bytes < 0) {
+        perror("Error receiving response\n");
         return -1;
     }
 
