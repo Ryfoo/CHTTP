@@ -7,11 +7,11 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <string.h>
-#include "../include/common.h"
+#include "common.h"
 
 // user-defined constants
 
-n_bytes_t http_handler(char* buffer);
-n_bytes_t handel_http_response();
+n_bytes_t handle_http_request(char* buffer);
+n_bytes_t handle_http_response();
 
 #endif
