@@ -32,50 +32,43 @@ socket_fd_t listening_starter(struct sockaddr_in* addr)
 }
 
 
-success_flag_t monitor(socket_fd_t fd, struct sockaddr_in* addr)
+void monitor(socket_fd_t fd, struct sockaddr_in* addr)
 {
     while(CONNECTION) {
         socklen_t len = sizeof(struct sockaddr_in);
-        socket_fd_t shared_fd = accept(fd, (struct sockaddr *) addr, &len);
-        if(shared_fd < 0) {
-            perror("Error establishing a common file descriptor\n");
+        socket_fd_t new_fd = accept(fd, (struct sockaddr *) addr, &len);
+        char* buffer = NULL;
+        if(new_fd < 0) {
+            perror("Error establishing a file descriptor for a new connection\n");
             continue;
         }
         printf("The connection has been established\n");
-        char* buffer = malloc(BUFF_SIZE);
+        char* buffer = malloc(RECV_BUFFER_SIZE);
         if(!buffer){
             perror("Error allocating memory\n");
-            close(shared_fd);
-            continue;
+            goto cleanup;
         }
-        memset(buffer, 0, BUFF_SIZE);
-        buffer = strcpy(buffer, "hello mate, welcome to the team\n");
-        msg_len_t sent = send(shared_fd, buffer, BUFF_SIZE, 0);
-        if (sent < 0) {
-            perror("Error sending data over the common file descriptor\n");
-            free(buffer);
-            close(shared_fd);
-            continue;
+
+        memset(buffer, 0, RECV_BUFFER_SIZE);
+        strcpy(buffer, "hello mate, welcome to the team\n");
+        if (send(new_fd, buffer, RECV_BUFFER_SIZE, 0) < 0) {
+            perror("Error sending data from the server\n");
+            goto cleanup;
         }
-        memset(buffer, 0, BUFF_SIZE);
-        msg_len_t received = recv(shared_fd, buffer, BUFF_SIZE, 0);
-        if (sent < 0) {
-            perror("Error sending data over the common file descriptor\n");
-            free(buffer);
-            close(shared_fd);
-            continue;
+
+        memset(buffer, 0, RECV_BUFFER_SIZE);
+        if (recv(new_fd, buffer, RECV_BUFFER_SIZE, 0) < 0) {
+            perror("Error sending data\n");
+            goto cleanup;
         }
-        success_flag_t s = handle_http_request(buffer);
-        if(s < 0) {
+        if(handle_http_request(buffer) < 0) {
             perror("Error handling the request\n");
-            free(buffer);
-            close(shared_fd);
-            return FAILURE;
+            goto cleanup;
         }
-        free(buffer);
-        close(shared_fd);
+        cleanup:
+            free(buffer);
+            close(new_fd);
     }
-    return 0;
 }
 
 
@@ -85,51 +78,64 @@ success_flag_t monitor(socket_fd_t fd, struct sockaddr_in* addr)
     No bind(), no listen() — just socket() + connect().
 */
 socket_fd_t connection_starter(struct sockaddr_in *addr) {
-    int fd;
+    socket_fd_t fd;
 
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd < 0) {
         printf("Error creating socket\n");
-        return FAILURE;
+        goto cleanup;
     }
 
     if (connect(fd, (struct sockaddr *)addr, sizeof(*addr)) < 0) {
         printf("Error connecting to server\n");
-        close(fd);
-        return FAILURE;
+        goto cleanup;
     }
 
     return fd;
+    cleanup:
+        close(fd);
+        return FAILURE;
 }
 
 
 n_bytes_t exchange(    
-                            int fd, 
-                            struct sockaddr_in *addr, 
-                            char* method, 
-                            char* uri, 
-                            header headers[HEADERS_LEN],
-                            char* body
-                        )
+                    int fd, 
+                    struct sockaddr_in *addr, 
+                    char* method, 
+                    char* uri, 
+                    header_t headers[HEADERS_LEN],
+                    size_t headers_count,
+                    char* body
+                )
 {
-    char* buffer = malloc(BUFF_SIZE);
+    char* buffer = malloc(RECV_BUFFER_SIZE);
     if(!buffer) {
         perror("Error allocating memory (Client's Side)\n");
-        return FAILURE;
+        goto cleanup;
     }
     n_bytes_t bytes;
 
     // Demo, here where the serialization should take place.
     // http_req instance -> serialize to shareable data -> send
     http_request_t req;
-    if(request_init(&req, method, uri, headers, body) < 0) 
+    if(request_init(&req, 
+                    method, 
+                    uri, 
+                    headers,
+                    headers_count,
+                    body) != SUCCESS
+                ) 
     {
         perror("Error creating an HTTP request\n");
-        return FAILURE;
+        goto cleanup;
     }
-    if(serialize(req, buffer, BUFF_SIZE) < 0)
+    if(serialize(   req, 
+                    buffer, 
+                    RECV_BUFFER_SIZE
+                    ) != SUCCESS
+                )
     {
-        return FAILURE;
+        goto cleanup;
     }
     // if (send(fd, request, strlen(request), 0) < 0) {
     //     perror("Error sending request\n");
@@ -140,15 +146,21 @@ n_bytes_t exchange(
         Wait for the server response.
         data -> parse to a string/json -> instance of http_res
     */
-    memset(buffer, 0, BUFF_SIZE);
-    bytes = recv(fd, buffer, BUFF_SIZE, 0);
+    memset(buffer, 0, RECV_BUFFER_SIZE);
+    bytes = recv(fd, buffer, RECV_BUFFER_SIZE, 0);
     if (bytes < 0) {
         perror("Error receiving response\n");
-        return FAILURE;
+        goto cleanup;
     }
 
 
     //here where the showcasing of the response should take place.
     printf("Server response:\n%s\n", buffer);
+    free(buffer);
     return bytes;
+
+    cleanup:
+        free(buffer);
+        perror("the client failed to connect\n");
+        return FAILURE;
 }

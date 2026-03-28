@@ -17,7 +17,7 @@
 #include "../include/handler.h"
 #include "../include/common.h"
 #include "../include/serializer.h"
-
+#include "../include/http.h"
 // user-defined constants
 
 #define QUEUE_LIMIT 1000
@@ -54,19 +54,18 @@ socket_fd_t listening_starter(struct sockaddr_in* addr);
  * follows the options AF_INET, SOCK_STREAM (man socket for more details).
  * return -1 on failure, 0 on success.
  */
-success_flag_t monitor(socket_fd_t fd, struct sockaddr_in* addr);
+void monitor(socket_fd_t fd, struct sockaddr_in* addr);
 
 
 
 /*
- * takes as arguments :
- * @params file descriptor of type socket_fd_t (uint8_t)   
+ * takes as arguments :  
  * @params sockaddr address (consider the manual page of socket.h).
  * Client-side connection initiator, calls socket() then connect().
  * follows the options AF_INET, SOCK_STREAM (man socket for more details).
- * return -1 on failure, 0 on success.
+ * returns the file descriptor of the client, -1 on failure.
  */
-success_flag_t connection_starter(struct sockaddr_in *addr);
+socket_fd_t connection_starter(struct sockaddr_in *addr);
 
 /*
  * takes as arguments :
@@ -76,7 +75,14 @@ success_flag_t connection_starter(struct sockaddr_in *addr);
  * follows the options AF_INET, SOCK_STREAM (man socket for more details).
  * return -1 on failure, 0 on success.
  */
-success_flag_t exchange(int fd, struct sockaddr_in *addr, char* method, char* uri, header headers[HEADERS_LEN], char* body);
+n_bytes_t exchange(
+                        int fd, 
+                        struct sockaddr_in *addr, 
+                        char* method, char* uri, 
+                        header_t headers[HEADERS_LEN],
+                        size_t headers_count, 
+                        char* body
+                    );
 
 
 
