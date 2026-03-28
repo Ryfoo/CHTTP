@@ -19,7 +19,6 @@
 #define BODY_SIZE 8192  
 
 typedef int8_t socket_fd_t;
-typedef size_t msg_len_t;
 typedef int8_t success_flag_t;
 typedef int16_t n_bytes_t;
 
