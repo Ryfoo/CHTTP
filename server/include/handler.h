@@ -11,7 +11,5 @@
 
 // user-defined constants
 
-n_bytes_t handle_http_request(char* buffer);
-n_bytes_t handle_http_response();
 
 #endif
