@@ -7,12 +7,12 @@
 */
 
 
-success_flag_t server_engine(char* ip, char* port) {
+success_flag_t server_engine(char* ip, char* port, int8_t running) {
     struct sockaddr_in addr;
     int fd;
     
     /*
-        initializing and preparting the struct sockaddr with 
+        initializing and preparting  method[SHORT_LENGTH];the struct sockaddr with 
         the desirable options
         address_init is a user-defind function
         for modulartiy, readability and portability
@@ -31,7 +31,7 @@ success_flag_t server_engine(char* ip, char* port) {
     fd = listening_starter(&addr);
 
     if (fd < 0) {
-        return -1;
+        return FAILURE;
     }
     /*
         Here, lies the heart of the server.
@@ -40,9 +40,11 @@ success_flag_t server_engine(char* ip, char* port) {
     
     */
 
-    monitor(fd, &addr);
+    monitor(fd, &addr, running);
     
+
     
     close(fd);
-    return 0;
+    return SUCCESS;
 }
+

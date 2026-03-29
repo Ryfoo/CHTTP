@@ -27,6 +27,6 @@
  * provides error handling
  * returns -1 on failure, 0 on success
  */
-success_flag_t server_engine(char* ip, char* port);
+success_flag_t server_engine(char* ip, char* port, int8_t running);
 
 #endif
