@@ -38,7 +38,7 @@ void monitor(socket_fd_t host_fd, struct sockaddr_in* addr)
         socklen_t len = sizeof(struct sockaddr_in);
         socket_fd_t transfer_fd = accept(host_fd, (struct sockaddr *) addr, &len);
         if(transfer_fd < 0) {
-            perror("Error establishing a file descriptor for a new connection\n");
+            perror("Error establishing connection\n");
             continue;
         }
         char* send_buffer = NULL;
@@ -55,13 +55,6 @@ void monitor(socket_fd_t host_fd, struct sockaddr_in* addr)
             goto cleanup;
         }
 
-        // sending a welcome message.
-        memset(send_buffer, 0, SEND_BUFF_SIZE);
-        strcpy(send_buffer, "hello mate, welcome to the team\n");
-        if (send(transfer_fd, send_buffer, SEND_BUFF_SIZE, 0) < 0) {
-            perror("Error sending data from the server\n");
-            goto cleanup;
-        }
 
         // waiting for the HTTP request.
         memset(recv_buffer, 0, RECV_BUFF_SIZE);
@@ -70,11 +63,20 @@ void monitor(socket_fd_t host_fd, struct sockaddr_in* addr)
             goto cleanup;
         }
         http_request_t req;
-        if(handle_http_request(recv_buffer, &req) != SUCCESS) {
+        http_response_t res;
+
+        if(handle_http_request(recv_buffer, send_buffer, &req, &req) != SUCCESS) {
             perror("Error handling the request\n");
             goto cleanup;
         }
-
+        if(send(transfer_fd, send_buffer, SEND_BUFF_SIZE, 0))
+        {
+            perror("Error sending data\n");
+            goto cleanup;
+        }
+        free(recv_buffer);
+        free(send_buffer);
+        close(transfer_fd);
         
         cleanup:
             free(recv_buffer);
@@ -150,7 +152,7 @@ n_bytes_t exchange(
         perror("Error creating an HTTP request\n");
         goto cleanup;
     }
-    if(serialize(   req, 
+    if(serialize_req(   req, 
                     send_buffer, 
                     SEND_BUFF_SIZE
                     ) != SUCCESS
