@@ -32,6 +32,35 @@ RTFM "Read The Manual" and the 'F' is added for aesthetics ;)
 
 ---
 
+### How To Use
+
+this is simple straight forward guide on how you can host the server on your local machine.
+
+compile the files using options such as -g (for debugging), -Wall to show all warnings 
+
+```bash
+make
+```
+use the commad ip, to extract your local machine ip address.
+
+```bash
+ip a
+```
+choose a port using and open it to allow other machines within the network to connect, using 8080 for instance
+
+```bash
+sudo wfu allow 8080
+```
+from the main director, execute
+
+```bash
+./driver ip-address port
+```
+
+now you can access ip:port/index.html from any device within the network.
+
+---
+
 ## Philosophy
 
 Starting with the smallest thing that works. Getting one client talking to one server. Then adding just enough to handle real HTTP. Then adding mechanisms to handle concurrent users and requests (I hate dealing with that sh*t). No step is skipped. Without forgetting the first rule 'RTFM' ;).
