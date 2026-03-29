@@ -57,7 +57,7 @@ from the main director, execute
 ./driver ip-address port
 ```
 
-now you can access ip:port/index.html from any device within the network.
+now you can access ip:port/ from any device within the network.
 
 ---
 
