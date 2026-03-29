@@ -54,7 +54,7 @@ socket_fd_t listening_starter(struct sockaddr_in* addr);
  * follows the options AF_INET, SOCK_STREAM (man socket for more details).
  * return -1 on failure, 0 on success.
  */
-void monitor(socket_fd_t fd, struct sockaddr_in* addr);
+void monitor(socket_fd_t fd, struct sockaddr_in* addr, int8_t running);
 
 
 
@@ -82,7 +82,8 @@ n_bytes_t exchange(
                         const char* uri, 
                         header_t headers[HEADERS_LEN],
                         size_t headers_count,
-                        const char* body
+                        const char* body,
+                        http_response_t* res
                     );
 
 

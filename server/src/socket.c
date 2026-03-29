@@ -4,8 +4,8 @@
 void address_init(struct sockaddr_in* addr, char* ip, char* port) {
     memset(addr, 0, sizeof(*addr));
     addr->sin_family = AF_INET;
-    addr->sin_addr.s_addr = inet_addr(ip);
-    addr->sin_port = htons(port);
+    addr->sin_addr.s_addr = inet_addr((const char*)ip);
+    addr->sin_port = (in_port_t) htons((u_int16_t)atoi((const char*)port));
 }
 
 socket_fd_t listening_starter(struct sockaddr_in* addr)
@@ -18,7 +18,7 @@ socket_fd_t listening_starter(struct sockaddr_in* addr)
         return FAILURE;
     }
     if(bind(host_fd, (struct sockaddr*) addr, sizeof(*addr)) < 0) {
-        printf("Error binding (giving the local fd) the address : %s\n", addr->sin_addr);
+        perror("Error binding (giving the local fd) the address\n");
         close(host_fd);
         return FAILURE;
     }
@@ -32,9 +32,9 @@ socket_fd_t listening_starter(struct sockaddr_in* addr)
 }
 
 
-void monitor(socket_fd_t host_fd, struct sockaddr_in* addr)
+void monitor(socket_fd_t host_fd, struct sockaddr_in* addr, int8_t running)
 {
-    while(CONNECTION) {
+    while(running) {
         socklen_t len = sizeof(struct sockaddr_in);
         socket_fd_t transfer_fd = accept(host_fd, (struct sockaddr *) addr, &len);
         if(transfer_fd < 0) {
@@ -43,13 +43,14 @@ void monitor(socket_fd_t host_fd, struct sockaddr_in* addr)
         }
         char* send_buffer = NULL;
         char* recv_buffer = NULL;
-
+        http_request_t* req = NULL;
+        http_response_t* res = NULL;
 
         printf("The connection has been established\n");
 
 
-        char* send_buffer = malloc(SEND_BUFF_SIZE);
-        char* send_buffer = malloc(RECV_BUFF_SIZE);
+        send_buffer = malloc(SEND_BUFF_SIZE);
+        recv_buffer = malloc(RECV_BUFF_SIZE);
         if(!send_buffer || !recv_buffer){
             perror("Error allocating memory\n");
             goto cleanup;
@@ -62,25 +63,54 @@ void monitor(socket_fd_t host_fd, struct sockaddr_in* addr)
             perror("Error sending data\n");
             goto cleanup;
         }
-        http_request_t req;
-        http_response_t res;
+        
+        req = malloc(sizeof(http_request_t));
+        res = malloc(sizeof(http_response_t));
 
-        if(handle_http_request(recv_buffer, send_buffer, &req, &req) != SUCCESS) {
+        if(handle_http_request(recv_buffer, send_buffer, req, res) != SUCCESS) {
             perror("Error handling the request\n");
             goto cleanup;
         }
-        if(send(transfer_fd, send_buffer, SEND_BUFF_SIZE, 0))
+        if(send(transfer_fd, send_buffer, SEND_BUFF_SIZE, 0) < 0)
         {
             perror("Error sending data\n");
             goto cleanup;
         }
         free(recv_buffer);
         free(send_buffer);
+        
+
+        free(req->req_line);
+        free(req->head);
+        free(req->body);
+        free(req);
+
+
+        free(res->res_line);
+        free(res->head);
+        free(res->body);
+        free(res);
+
+
         close(transfer_fd);
         
         cleanup:
             free(recv_buffer);
             free(send_buffer);
+
+            free(req->req_line);
+            free(req->head);
+            free(req->body);
+            free(req);
+            
+
+            free(res->res_line);
+            free(res->head);
+            free(res->body);
+            free(res);
+            
+
+
             close(transfer_fd);
     }
 }
@@ -119,7 +149,8 @@ n_bytes_t exchange(
                     const char* uri, 
                     header_t headers[HEADERS_LEN],
                     size_t headers_count,
-                    const char* body
+                    const char* body,
+                    http_response_t* res
                 )
 {
 
@@ -128,11 +159,13 @@ n_bytes_t exchange(
     // declaring as null, so the cleanup process can be unified.
     char* send_buffer = NULL;
     char* recv_buffer = NULL;
+    http_request_t* req = NULL;
+
 
     // allocating memory for data to be sent/recieved.
     send_buffer = malloc(SEND_BUFF_SIZE);
     recv_buffer = malloc(RECV_BUFF_SIZE);
-    if(!send_buffer || recv_buffer) {
+    if(!send_buffer || !recv_buffer) {
         perror("Error allocating memory (Client's Side)\n");
         goto cleanup;
     }
@@ -140,8 +173,9 @@ n_bytes_t exchange(
 
     // here where the serialization should take place.
     // http_req instance -> serialize to shareable data -> send.
-    http_request_t req;
-    if(request_init(&req, 
+    req = malloc(sizeof(http_request_t));
+    if(request_init(
+                    req, 
                     method, 
                     uri, 
                     headers,
@@ -152,18 +186,14 @@ n_bytes_t exchange(
         perror("Error creating an HTTP request\n");
         goto cleanup;
     }
-    if(serialize_req(   req, 
-                    send_buffer, 
-                    SEND_BUFF_SIZE
-                    ) != SUCCESS
-                )
+    if(serialize_req(send_buffer, req, SEND_BUFF_SIZE) != SUCCESS)   
     {
         goto cleanup;
     }
-    // if (send(fd, request, strlen(request), 0) < 0) {
-    //     perror("Error sending request\n");
-    //     return FAILURE;
-    // }
+    if (send(fd, send_buffer, SEND_BUFF_SIZE, 0) < 0) {
+        perror("Error sending request\n");
+        goto cleanup;
+    }
 
     /*
         Wait for the server response.
@@ -176,17 +206,24 @@ n_bytes_t exchange(
         goto cleanup;
     }
 
+    if(parse_res((const char*) recv_buffer, res) != SUCCESS)
+    {
+        perror("Error parsing response\n");
+        goto cleanup;
+    }
+
 
     
     free(send_buffer);
     free(recv_buffer);
+    free(req);
     close(fd);
     return bytes;
 
     cleanup:
         free(send_buffer);
         free(recv_buffer);
-        close(fd);
+        free(req);
         perror("the client failed to connect\n");
         return (n_bytes_t) FAILURE;
 }
