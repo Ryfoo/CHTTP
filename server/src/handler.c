@@ -3,12 +3,14 @@ success_flag_t make_404_response(http_response_t* res)
 {
     res->res_line->status = 404;
     strcpy(res->res_line->reason, "not found");
+    res->head = NULL;
+    res->body = NULL;
     
     return FAILURE;
 }
 success_flag_t index_handler(http_request_t req, http_response_t* res)
 {
-    if (!res) return FAILURE;
+    if (!res) return make_404_response(res);
 
     FILE* f = fopen("../../static/index.html", "r");
     if (!f)
