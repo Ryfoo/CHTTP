@@ -3,11 +3,11 @@
 
 success_flag_t request_init(
                             http_request_t *req, 
-                            char* method, 
-                            char* uri, 
+                            const char* method, 
+                            const char* uri, 
                             header_t headers[HEADERS_LEN], 
-                            size_t headers_count,
-                            char* body
+                            const size_t headers_count,
+                            const char* body
                         ) 
 {
     //allocating header.
@@ -41,9 +41,12 @@ success_flag_t request_init(
         perror("malloc rl at request_init()@http.c");
         goto cleanup;
     }
+    memset(rl->method, 0, SHORT_LENGTH);
+    memset(rl->uri, 0, SHORT_LENGTH);
+    memset(rl->http_version, 0, SHORT_LENGTH);
     strcpy(rl->method, method);
     strcpy(rl->uri, uri);
-    strcpy(rl->http_version, "HTTP/1.0"); //will be extended later to include HTTP/1.1.
+    strcpy(rl->http_version, "HTTP/1.0"); //will be extended later to include HTTP/1.1 then HTTP/2
 
     
 
@@ -88,21 +91,29 @@ success_flag_t handle_http_request(
                                     http_response_t* res
                                 )
 {
-    if(parse(recv_buffer, req) != SUCCESS)
+    if(parse_req(recv_buffer, req) != SUCCESS)
     {
         
         return FAILURE;
     }
-    
-    if(routing_handler(req, &res) != SUCCESS)
+    res->res_line = malloc(sizeof(status_line_t));
+    res->head = malloc(sizeof(header_t) * HEADERS_LEN);
+    if(!res->head || !res->res_line)
+    {
+        return FAILURE;
+    }
+
+    if(router_handler(req, res) != SUCCESS)
     {
         return FAILURE;
     }
     
     memset(send_buffer, 0, SEND_BUFF_SIZE);
-    if(serialize_res(send_buffer, res) != SUCCESS)
+    if(serialize_res(send_buffer, res, SEND_BUFF_SIZE) != SUCCESS)
     {
         return FAILURE;
     }
+
+    return SUCCESS;
 
 }

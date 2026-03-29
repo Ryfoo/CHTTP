@@ -8,6 +8,7 @@
 #include "common.h"
 #include "parser.h"
 #include "serializer.h"
+#include "router.h"
 
 #ifndef HTTP_H
 #define HTTP_H
@@ -22,11 +23,11 @@ void request_set_body(http_request_t *req, const char *data, size_t len);
 
 success_flag_t request_init(
                             http_request_t *req, 
-                            char* method, 
-                            char* uri, 
+                            const char* method, 
+                            const char* uri, 
                             header_t headers[HEADERS_LEN], 
-                            size_t headers_count,
-                            char* body
+                            const size_t headers_count,
+                            const char* body
                         );
 success_flag_t handle_http_request( 
                                     const char* recv_buffer,
