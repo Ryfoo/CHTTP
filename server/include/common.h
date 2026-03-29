@@ -1,5 +1,9 @@
 
 #include <stdint.h>
+#include <stddef.h>
+#include <string.h>
+#include <stdlib.h>
+
 
 #ifndef COMMON_H
 #define COMMON_H
@@ -43,7 +47,7 @@ typedef struct
 typedef struct
 {
     char http_version[SHORT_LENGTH];
-    int8_t status;
+    int16_t status;
     char reason[SHORT_LENGTH];
     
 }status_line_t;
