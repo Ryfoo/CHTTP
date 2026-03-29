@@ -22,7 +22,7 @@ success_flag_t client_engine(
     */
     struct sockaddr_in addr;
     socket_fd_t fd;
-
+    http_response_t* res = NULL;
     /*
         use address_init() from socket.h
     */
@@ -36,6 +36,7 @@ success_flag_t client_engine(
     fd = connection_starter(&addr);
     if (fd < 0) {
         perror("Error establishing connection\n");
+        free(res);
         return FAILURE;
     }
 
@@ -44,6 +45,10 @@ success_flag_t client_engine(
         sends requests and receives responses
         using the server's address.
     */
+    res = malloc(sizeof(http_response_t));
+    if(!res){
+        goto cleanup;
+    }
     if (exchange(
                     fd, 
                     &addr, 
@@ -51,14 +56,22 @@ success_flag_t client_engine(
                     uri, 
                     headers,
                     headers_count,
-                    body    
-                ) != SUCCESS) {
+                    body,
+                    res   
+                ) < 0) {
         printf("Error sending data to the server\n");
-        close(fd);
-        return FAILURE;
+        goto cleanup;
     }
 
-
+    printf("this is the content :\n %s \n", res->body);
+    free(res->res_line);
+    free(res->head);
+    free(res->body);
+    free(res);
     close(fd);
     return SUCCESS;
+    cleanup:
+        free(res);
+        close(fd);
+        return FAILURE;
 }
