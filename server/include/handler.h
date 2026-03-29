@@ -12,4 +12,7 @@
 // user-defined constants
 
 
+
+success_flag_t index_handler(http_request_t req, http_response_t* res);
+
 #endif
