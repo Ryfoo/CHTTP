@@ -12,6 +12,6 @@
  * @params size_t buffer_size will be used as a memory size limit.
  * returns 0 on success, -1 on failure.
  */
-success_flag_t serialize(http_request_t req, char* buffer, size_t buffer_size);
+success_flag_t serialize_req(http_request_t req, char* buffer, size_t buffer_size);
 
 #endif

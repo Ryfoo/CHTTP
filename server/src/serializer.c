@@ -1,6 +1,6 @@
 #include "../include/serializer.h"
 
-success_flag_t serialize(http_request_t req, char* buffer, size_t buffer_size) {
+success_flag_t serialize_req(http_request_t req, char* buffer, size_t buffer_size) {
     size_t offset = 0;
     int written;
 
