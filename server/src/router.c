@@ -1,12 +1,12 @@
 #include "../include/router.h"
 
 
-success_flag_t router_handler(http_request_t req, http_request_t* res)
+success_flag_t router_handler(http_request_t* req, http_response_t* res)
 {
     
-    if(strcmp(req.req_line->method, "GET"))
+    if(strcmp(req->req_line->method, "GET") == 0)
     {
-        if((req.req_line->uri, "/index.html"))
+        if(strcmp(req->req_line->uri, "/index.html") == 0)
         {
             return index_handler(req, res);
         }
@@ -14,5 +14,5 @@ success_flag_t router_handler(http_request_t req, http_request_t* res)
     }
     // if(strcmp(req.req_line->method, "POST"))
 
-    return make_404_response();
+    return make_404_response(res);
 }
