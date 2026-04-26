@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>About — Scratchy HTTP</title>
+  <link href="/static/site.css" rel="stylesheet"/>
+</head>
+<body>
+  <div class="glow-top"></div>
+  <div class="page">
+    <header>
+      <p class="eyebrow">About</p>
+      <h1>Scratchy HTTP<em>a server, written by hand</em></h1>
+      <div class="divider"></div>
+    </header>
+
+    <main class="prose">
+      <p>
+        Scratchy is a small HTTP/1.1 server written in C without a framework —
+        just sockets, threads, and a hand-rolled parser. Every request is
+        handed to its own worker thread, so requests don't queue behind one
+        another.
+      </p>
+      <p>
+        The router is a flat table of <code>(method, path, handler)</code>
+        triples. Anything that doesn't match falls through to a static-file
+        responder for <code>/static/*</code> and <code>/assets/*</code>, then
+        to a 404 page.
+      </p>
+      <ul class="links">
+        <li><a href="/">home</a></li>
+        <li><a href="/contact">contact</a></li>
+        <li><a href="/form">try the form</a></li>
+        <li><a href="/api/time">/api/time</a></li>
+      </ul>
+    </main>
+
+    <footer><p>✦ &nbsp; written close to the metal &nbsp; ✦</p></footer>
+  </div>
+</body>
+</html>

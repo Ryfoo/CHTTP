@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Form — Scratchy HTTP</title>
+  <link href="/static/site.css" rel="stylesheet"/>
+</head>
+<body>
+  <div class="glow-top"></div>
+  <div class="page">
+    <header>
+      <p class="eyebrow">POST /form</p>
+      <h1>Speak your mind<em>the server will echo</em></h1>
+      <div class="divider"></div>
+    </header>
+
+    <main class="prose">
+      <form method="POST" action="/form" class="card">
+        <label>Name<br/>
+          <input name="name" type="text" placeholder="Aurora" required/>
+        </label>
+        <label>Message<br/>
+          <textarea name="message" rows="4" placeholder="hello, world…" required></textarea>
+        </label>
+        <button type="submit">submit</button>
+      </form>
+
+      <p class="note">
+        The server parses <code>application/x-www-form-urlencoded</code>,
+        URL-decodes each field, and renders them back as a small page.
+      </p>
+    </main>
+
+    <footer><p>✦ &nbsp; round-trip in HTTP/1.1 &nbsp; ✦</p></footer>
+  </div>
+</body>
+</html>
