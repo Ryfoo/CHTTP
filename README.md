@@ -128,3 +128,23 @@ the one and only, Daniel Hirsch.
 ## The Scratchy Series
 
 Scratchy is a personal project series dedicated to rebuilding common software tools without relying on the libraries that normally hide their complexity. Each project in the series targets one layer of the stack.
+
+
+
+document 
+
+
+HTTP Servers : The Beating Heart Of The Web
+Introduction : HTTP The Language Of The Web
+We type "http" and "https" before every "url" we access daily without a second thought, but have you ever stopped to wonder what do these magic words indicate? Well, my curiosity driven me down the rabbit-hole, into the world of the web to answer a simple but very important question: why are these four letters the gatekeepers of our digital lives? In this article, we will strip away the abstraction and take a deep look at the fascinating underlying mechanics that makes the web possible.
+The Hyper Text Transfer protocol or "HTTP" for short, is the Web's application-layer set of rules that allows for a valid client-server communication, in simple terms it's the web's way of determining what's good and what's bad. What? you thought you are the only one with morals & standards. But how does this communication happen? and why do we need HTTP in the first place?
+Yeah I see you have a curious mind - keep that, you will need it in a second. 
+We all have that extremely boring friend whom we found ourselves calling the second things get tough. To every machine on earth, that friend is the web. Think of it as the ultimate stickler for the rules, a system that functions because it follows strict laws called 'protocols'. 
+You guessed it: HTTP is the most famous of them all. It's a shared language that all machines can comprehend and speak. By committing to it, all machines can transfer chaotic and messy data into regulated, understandable and universal language, that can easily travel along the globe. Without this boring and rigid obedience, your local machine won't be able to speak to a Korean one (if you are Korean, I do apologize).
+
+Let's Talk HTTP-ic : The Grammar Of The Web
+Far away,  into the old historical land of Webilium, known for its fine silk and its kind people (endpoint) who talk their own unique yet fascinating language - HTTP-ic, they value time and knowledge to a degree where they developed a very weird yet fascinating habit which is speaking in a question-answer form. Since you seem interested in learning their native tongue, let's waste no time.
+Each question consists of 3 segments:
+The dense & informative segment :
+The additional yet necessary:
+The yappers part

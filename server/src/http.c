@@ -1,119 +1,103 @@
 #include "../include/http.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <strings.h>
 
 
-success_flag_t request_init(
-                            http_request_t *req, 
-                            const char* method, 
-                            const char* uri, 
-                            header_t headers[HEADERS_LEN], 
-                            const size_t headers_count,
-                            const char* body
-                        ) 
+void http_request_free(http_request_t* req)
 {
-    //allocating header.
-    headers_list_t* hd = NULL;
-    request_line_t* rl = NULL;
+    if (!req) return;
+    free(req->req_line);
+    free(req->head);
+    free(req->body);
+    req->req_line = NULL;
+    req->head = NULL;
     req->body = NULL;
+    req->body_size = 0;
+}
 
-    if(headers_count > HEADERS_LEN) goto cleanup;
-
-    hd = malloc(sizeof(header_t) * HEADERS_LEN);
-    if(!hd)
-    {   
-        perror("malloc headers at request_init()@http.c");
-        goto cleanup;
-    }
-    for(size_t i = 0 ; i < headers_count; i++)
-    {
-        strncpy(hd->headers[i].name, headers[i].name, HEADER_NAME_LENGTH - 1);
-        hd->headers[i].name[HEADER_NAME_LENGTH - 1] = '\0';
-
-        strncpy(hd->headers[i].value, headers[i].value, HEADER_NAME_LENGTH - 1);
-        hd->headers[i].value[HEADER_NAME_LENGTH - 1] = '\0';
-    }
-    hd->headers_counter = headers_count;
-    
-    //allocating request_line
-
-    rl = malloc(sizeof(request_line_t));
-    if(!rl)
-    {
-        perror("malloc rl at request_init()@http.c");
-        goto cleanup;
-    }
-    memset(rl->method, 0, SHORT_LENGTH);
-    memset(rl->uri, 0, SHORT_LENGTH);
-    memset(rl->http_version, 0, SHORT_LENGTH);
-    strcpy(rl->method, method);
-    strcpy(rl->uri, uri);
-    strcpy(rl->http_version, "HTTP/1.0"); //will be extended later to include HTTP/1.1 then HTTP/2
-
-    
-
-    if(body)
-    {
-        req->body = malloc(strlen(body) + 1);
-        if(!req->body) 
-        {   
-            perror("malloc body at request_init()@http.c");
-            goto cleanup;
-        }
-        strcpy(req->body, body);
-        req->body_size = strlen(body);
-    }
-    else
-    {
-        req->body = NULL;
-        req->body_size = 0;
-    }
-    
-    req->req_line = rl;
-    req->head = hd;
-    return SUCCESS;
-
-
-    cleanup:
-        perror("Error  at request_init()@http.c\n");
-        free(rl);
-        free(hd);
-        free(req->body);
-        return FAILURE;
+void http_response_free(http_response_t* res)
+{
+    if (!res) return;
+    free(res->res_line);
+    free(res->head);
+    free(res->body);
+    res->res_line = NULL;
+    res->head = NULL;
+    res->body = NULL;
+    res->body_size = 0;
 }
 
 
-
-
-
-success_flag_t handle_http_request(
-                                    char* recv_buffer,
-                                    char* send_buffer, 
-                                    http_request_t* req,
-                                    http_response_t* res
-                                )
+success_flag_t http_build_response(http_request_t* req,
+                                   http_response_t* res,
+                                   int keep_alive)
 {
-    if(parse_req(recv_buffer, req) != SUCCESS)
-    {
-        
-        return FAILURE;
-    }
-    res->res_line = malloc(sizeof(status_line_t));
-    res->head = malloc(sizeof(header_t) * HEADERS_LEN);
-    if(!res->head || !res->res_line)
-    {
-        return FAILURE;
+    if (!req || !res) return FAILURE;
+
+    /* Dispatch. The handler allocates res->res_line / res->head / res->body. */
+    if (router_dispatch(req, res) != SUCCESS) {
+        /* Handler bailed without producing anything → synthesise a 500.
+           If even that fails we have nothing to send. */
+        http_response_free(res);
+        if (make_500(res) != SUCCESS) return FAILURE;
     }
 
-    if(router_handler(req, res) != SUCCESS)
-    {
-        return FAILURE;
-    }
-    
-    memset(send_buffer, 0, SEND_BUFF_SIZE);
-    if(serialize_res(send_buffer, res, RECV_BUFF_SIZE) != SUCCESS)
-    {
-        return FAILURE;
-    }
+    /* Always advertise HTTP/1.1 — that's the contract of this server. */
+    strcpy(res->res_line->http_version, "HTTP/1.1");
+
+    /* Standard headers added on every response. */
+    char date[64];
+    http_date_now(date, sizeof(date));
+    header_set(res->head, "Date", date);
+    header_set(res->head, "Server", "scratchy/1.1");
+    header_set(res->head, "Connection", keep_alive ? "keep-alive" : "close");
+
+    char clbuf[32];
+    snprintf(clbuf, sizeof(clbuf), "%zu", res->body_size);
+    header_set(res->head, "Content-Length", clbuf);
 
     return SUCCESS;
+}
 
+
+/* Used by the client driver. */
+success_flag_t request_init(http_request_t* req,
+                            const char* method,
+                            const char* uri,
+                            header_t headers[HEADERS_LEN],
+                            const size_t headers_count,
+                            const char* body)
+{
+    if (!req || !method || !uri) return FAILURE;
+    if (headers_count > HEADERS_LEN) return FAILURE;
+
+    req->req_line = calloc(1, sizeof(request_line_t));
+    req->head     = calloc(1, sizeof(headers_list_t));
+    req->body     = NULL;
+    req->body_size = 0;
+    if (!req->req_line || !req->head) goto fail;
+
+    strncpy(req->req_line->method, method, SHORT_LENGTH - 1);
+    strncpy(req->req_line->uri,    uri,    URI_LENGTH   - 1);
+    strcpy (req->req_line->http_version, "HTTP/1.1");
+
+    if (headers && headers_count) {
+        memcpy(req->head->headers, headers, headers_count * sizeof(header_t));
+        req->head->headers_counter = headers_count;
+    }
+
+    if (body && *body) {
+        size_t n = strlen(body);
+        req->body = malloc(n + 1);
+        if (!req->body) goto fail;
+        memcpy(req->body, body, n + 1);
+        req->body_size = n;
+    }
+    return SUCCESS;
+
+fail:
+    http_request_free(req);
+    return FAILURE;
 }
